@@ -1,0 +1,25 @@
+version: '2'
+
+services:
+  db:
+    image: mongo:3.4.6
+    environment:
+      - MONGO_LOG_DIR=/data/mongo/log
+    volumes:
+      - /home/deploy/db/geek-digest-dev/db:/data/db
+      - /home/deploy/db/geek-digest-dev/log:/data/mongo/log
+    ports:
+      - "27018:27017"
+    command: mongod --smallfiles --logpath=/data/mongo/log/mongo.log --wiredTigerCacheSizeGB 0.75 # --quiet
+
+  geek-digest:
+    build:
+      context: .
+      dockerfile: docker/Test.Dockerfile
+    image: gmirror/geek-digest-service:dev
+    command: bash -c "python3 -u run.py runserver -h 0.0.0.0 -p 8001 --thread"
+    ports:
+      - "8010:8001"
+    env_file: /home/deploy/envs/geek-digest-service.dev.env
+    links:
+      - db
